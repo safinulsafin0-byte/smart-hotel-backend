@@ -2,69 +2,64 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const router = express.Router();
 
-router.post('/api/send-confirmation', async (req, res) => {
-  const {
-    booking_id,
-    guest_name,
-    guest_email,
-    room_name,
-    check_in,
-    check_out,
-    guests_count,
-    total_price,
-  } = req.body;
+// Transporter Config with IPv4 Force
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  family: 4, // এটাই আসল কাজ করবে, ENETUNREACH ফিক্স করার জন্য
+  auth: {
+    user: "safinulsafin0@gmail.com",
+    pass: process.env.EMAIL_PASS,
+  },
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+});
 
-  if (!guest_email) {
-    return res.status(400).json({ error: 'guest_email is required' });
-  }
-
-  // রেন্ডার-বান্ধব কনফিগারেশন
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, 
-    auth: {
-      user: 'safinulsafin0@gmail.com',
-      pass: process.env.EMAIL_PASS,
-    },
-    // এই অংশটুকু রেন্ডারের নেটওয়ার্ক ইস্যু হ্যান্ডেল করার জন্য জরুরি
-    tls: {
-      rejectUnauthorized: false,
-      minVersion: 'TLSv1.2'
-    },
-    connectionTimeout: 10000, // ১০ সেকেন্ড টাইমআউট
-    greetingTimeout: 5000
-  });
-
-  const mailOptions = {
-    from: '"SmartHotel" <safinulsafin0@gmail.com>',
-    to: guest_email,
-    subject: `Booking Confirmed — ${room_name ?? 'Your Stay'}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-        <h2 style="color:#1d6fb8; text-align: center;">Booking Confirmed ✅</h2>
-        <p>Hi <strong>${guest_name}</strong>,</p>
-        <p>Your booking details are as follows:</p>
-        <hr>
-        <p><strong>Booking ID:</strong> ${booking_id}</p>
-        <p><strong>Room:</strong> ${room_name ?? '-'}</p>
-        <p><strong>Check-in:</strong> ${check_in}</p>
-        <p><strong>Check-out:</strong> ${check_out}</p>
-        <p><strong>Price:</strong> ৳${total_price}</p>
-        <hr>
-        <p>See you soon!</p>
-      </div>
-    `,
-  };
-
+router.post("/api/send-confirmation", async (req, res) => {
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent:', info.messageId);
-    return res.status(200).json({ success: true, messageId: info.messageId });
+    const booking = req.body;
+    
+    if (!booking.guest_email) {
+      return res.status(400).json({ success: false, message: "Guest email is required" });
+    }
+
+    await transporter.sendMail({
+      from: `"Smart Hotel" <safinulsafin0@gmail.com>`,
+      to: booking.guest_email,
+      subject: `Your booking is confirmed — ${booking.room_name || 'Room'}`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
+          <h2 style="color: #1d6fb8;">Booking Confirmed ✅</h2>
+          <p>Hello <strong>${booking.guest_name}</strong>,</p>
+          <p>Your booking has been confirmed successfully.</p>
+          <hr>
+          <p><strong>Room:</strong> ${booking.room_name || "N/A"}</p>
+          <p><strong>Check-in:</strong> ${booking.check_in}</p>
+          <p><strong>Check-out:</strong> ${booking.check_out}</p>
+          <p><strong>Total:</strong> ৳${booking.total_price}</p>
+          <hr>
+          <p>Thank you for staying with us!</p>
+        </div>
+      `,
+    });
+
+    console.log("✅ Confirmation email sent to:", booking.guest_email);
+    return res.status(200).json({
+      success: true,
+      message: "Confirmation email sent",
+    });
+
   } catch (error) {
-    console.error('❌ Final Error Log:', error);
-    // যদি রেন্ডার একদমই কানেক্ট করতে না দেয়, আমরা এরর মেসেজটা ফ্রন্টএন্ডে পাঠিয়ে দিচ্ছি
-    return res.status(500).json({ error: "Email server unreachable: " + error.message });
+    console.error("❌ Email send failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Email send failed",
+      error: error.message,
+      code: error.code,
+    });
   }
 });
 
