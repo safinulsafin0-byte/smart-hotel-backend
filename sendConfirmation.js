@@ -4,18 +4,15 @@ const router = express.Router();
 
 // Transporter Config with IPv4 Force
 const transporter = nodemailer.createTransport({
-  service: "gmail",
   host: "smtp.gmail.com",
   port: 465,
-  secure: true,
-  family: 4, // Force IPv4 at socket level
+  secure: true, // ৪৬৫ পোর্টের জন্য true
   auth: {
     user: "safinulsafin0@gmail.com",
     pass: process.env.EMAIL_PASS,
   },
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
+  // IPv4 জোর করার জন্য socket লেভেল সেটিংস
+  connectionTimeout: 10000,
 });
 
 router.post("/api/send-confirmation", async (req, res) => {
