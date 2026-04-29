@@ -108,3 +108,5 @@ app.get('/', (req, res) => res.send("HotelPoint Backend is running fine!"));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server on: http://localhost:${PORT}`));
+const sendConfirmation = require('./sendConfirmation'); // ফাইলের পাথ অনুযায়ী
+app.use('/', sendConfirmation);
