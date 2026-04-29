@@ -20,10 +20,9 @@ router.post('/api/send-confirmation', async (req, res) => {
   }
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // ৫৮৭ পোর্টের জন্য এটা false হবে
     auth: {
       user: 'safinulsafin0@gmail.com',
       pass: process.env.EMAIL_PASS,
