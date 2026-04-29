@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
   secure: true,
-  family: 4, // এটাই আসল কাজ করবে, ENETUNREACH ফিক্স করার জন্য
+  family: 4, // Force IPv4 at socket level
   auth: {
     user: "safinulsafin0@gmail.com",
     pass: process.env.EMAIL_PASS,

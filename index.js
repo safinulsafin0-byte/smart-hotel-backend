@@ -1,6 +1,5 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first"); 
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -8,7 +7,7 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // ইমেজের জন্য লিমিট বাড়িয়ে দেওয়া হলো
+app.use(express.json({ limit: '50mb' })); 
 
 // --- MongoDB Connection ---
 mongoose.connect(process.env.MONGO_URL)
